@@ -1,219 +1,176 @@
--- [[ ★ PPINGYYY HUB - UI + NÚT CÂU ẢO (X KHÔNG TẮT NÚT CÂU ẢO) ★ ]] --
-local lp = game:GetService("Players").LocalPlayer
+-- ppingyyy hub
+local lp = game.Players.LocalPlayer
 local RS = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
+local TS = game:GetService("TweenService")
 
--- Xóa UI cũ
-for _, v in ipairs(game:GetService("CoreGui"):GetChildren()) do 
-    if v.Name == "PPINGYYY_Hub_Ultimate" then v:Destroy() end 
+for _,v in pairs(game.CoreGui:GetChildren()) do
+    if v.Name == "PPINGYYY_Hub_Ultimate" then v:Destroy() end
 end
-for _, v in ipairs(lp:WaitForChild("PlayerGui"):GetChildren()) do 
-    if v.Name == "PPINGYYY_Hub_Ultimate" then v:Destroy() end 
-end
+pcall(function()
+    for _,v in pairs(lp.PlayerGui:GetChildren()) do
+        if v.Name == "PPINGYYY_Hub_Ultimate" then v:Destroy() end
+    end
+end)
 
 local sg = Instance.new("ScreenGui")
 sg.Name = "PPINGYYY_Hub_Ultimate"
 sg.ResetOnSpawn = false
-pcall(function()
-    sg.Parent = game:GetService("CoreGui")
-end)
-if not sg.Parent then
-    sg.Parent = lp:WaitForChild("PlayerGui")
-end
+pcall(function() sg.Parent = game.CoreGui end)
+if not sg.Parent then sg.Parent = lp:WaitForChild("PlayerGui") end
 
--- Kích thước
-local MainSize = UDim2.new(0, 420, 0, 250)
-local MinimizedSize = UDim2.new(0, 420, 0, 40)
+local main = Instance.new("Frame", sg)
+main.Size = UDim2.new(0,420,0,250)
+main.Position = UDim2.new(0.3,0,0.3,0)
+main.BackgroundColor3 = Color3.fromRGB(15,15,17)
+Instance.new("UICorner", main).CornerRadius = UDim.new(0,10)
+Instance.new("UIStroke", main).Color = Color3.fromRGB(0,255,150)
 
--- Cửa sổ chính
-local Main = Instance.new("Frame", sg)
-Main.Size = MainSize
-Main.Position = UDim2.new(0.3, 0, 0.3, 0)
-Main.BackgroundColor3 = Color3.fromRGB(15, 15, 17)
-Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
-Instance.new("UIStroke", Main).Color = Color3.fromRGB(0, 255, 150)
+local bar = Instance.new("Frame", main)
+bar.Size = UDim2.new(1,0,0,40)
+bar.BackgroundTransparency = 1
 
--- TitleBar
-local TitleBar = Instance.new("Frame", Main)
-TitleBar.Size = UDim2.new(1, 0, 0, 40)
-TitleBar.BackgroundTransparency = 1
+local title = Instance.new("TextLabel", bar)
+title.Size = UDim2.new(1,0,1,0)
+title.BackgroundTransparency = 1
+title.Text = "PPINGYYY HUB"
+title.TextColor3 = Color3.fromRGB(0,255,150)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 14
 
-local TitleText = Instance.new("TextLabel", TitleBar)
-TitleText.Size = UDim2.new(1, 0, 1, 0)
-TitleText.Text = "★ PPINGYYY HUB ★"
-TitleText.TextColor3 = Color3.fromRGB(0, 255, 150)
-TitleText.Font = Enum.Font.GothamBold
-TitleText.TextSize = 14
-TitleText.BackgroundTransparency = 1
+local close = Instance.new("TextButton", bar)
+close.Size = UDim2.new(0,25,0,25)
+close.Position = UDim2.new(0.9,0,0.25,0)
+close.Text = "X"
+close.BackgroundColor3 = Color3.fromRGB(150,0,0)
+close.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", close).CornerRadius = UDim.new(0,5)
 
--- Nút Close
-local CloseBtn = Instance.new("TextButton", TitleBar)
-CloseBtn.Size = UDim2.new(0, 25, 0, 25)
-CloseBtn.Position = UDim2.new(0.9, 0, 0.25, 0)
-CloseBtn.Text = "X"
-CloseBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-CloseBtn.TextColor3 = Color3.new(1, 1, 1)
-Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 5)
+local minb = Instance.new("TextButton", bar)
+minb.Size = UDim2.new(0,25,0,25)
+minb.Position = UDim2.new(0.8,0,0.25,0)
+minb.Text = "-"
+minb.BackgroundColor3 = Color3.fromRGB(0,100,200)
+minb.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", minb).CornerRadius = UDim.new(0,5)
 
--- Nút Minimize
-local MinBtn = Instance.new("TextButton", TitleBar)
-MinBtn.Size = UDim2.new(0, 25, 0, 25)
-MinBtn.Position = UDim2.new(0.8, 0, 0.25, 0)
-MinBtn.Text = "—"
-MinBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
-MinBtn.TextColor3 = Color3.new(1, 1, 1)
-Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 5)
-
--- Kéo thả UI
-local dragging, dragInput, dragStart, startPos
-TitleBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = Main.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
+-- keo
+local drag, dStart, mStart
+bar.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+        drag = true
+        dStart = i.Position
+        mStart = main.Position
+        i.Changed:Connect(function()
+            if i.UserInputState == Enum.UserInputState.End then drag = false end
         end)
     end
 end)
 
-TitleBar.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
+UIS.InputChanged:Connect(function(i)
+    if drag and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+        local d = i.Position - dStart
+        main.Position = UDim2.new(mStart.X.Scale, mStart.X.Offset + d.X, mStart.Y.Scale, mStart.Y.Offset + d.Y)
     end
 end)
 
-UserInputService.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        local delta = input.Position - dragStart
-        Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
+local side = Instance.new("Frame", main)
+side.Size = UDim2.new(0,120,1,-40)
+side.Position = UDim2.new(0,0,0,40)
+side.BackgroundTransparency = 1
 
--- Sidebar
-local Sidebar = Instance.new("Frame", Main)
-Sidebar.Size = UDim2.new(0, 120, 1, -40)
-Sidebar.Position = UDim2.new(0, 0, 0, 40)
-Sidebar.BackgroundTransparency = 1
+local pages = Instance.new("Frame", main)
+pages.Size = UDim2.new(1,-130,1,-50)
+pages.Position = UDim2.new(0,125,0,45)
+pages.BackgroundTransparency = 1
 
--- Pages
-local Pages = Instance.new("Frame", Main)
-Pages.Size = UDim2.new(1, -130, 1, -50)
-Pages.Position = UDim2.new(0, 125, 0, 45)
-Pages.BackgroundTransparency = 1
-
--- Hàm tạo tab button
-local tabButtons = {}
-local function createTabButton(text, posIndex)
-    local btn = Instance.new("TextButton", Sidebar)
-    btn.Size = UDim2.new(0.85, 0, 0, 30)
-    btn.Position = UDim2.new(0.05, 0, 0, 4 + (posIndex * 34))
-    btn.Text = text
-    btn.TextColor3 = Color3.fromRGB(150, 150, 150)
-    btn.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 11
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-    table.insert(tabButtons, btn)
-    return btn
+local function mkTab(t, y)
+    local b = Instance.new("TextButton", side)
+    b.Size = UDim2.new(0.85,0,0,30)
+    b.Position = UDim2.new(0.05,0,0,y)
+    b.Text = t
+    b.TextColor3 = Color3.fromRGB(150,150,150)
+    b.BackgroundColor3 = Color3.fromRGB(20,20,25)
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = 11
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
+    return b
 end
 
-local Tab1Btn = createTabButton("🎣 Câu Cá", 0)
-local Tab2Btn = createTabButton("⚡ Kỹ Năng", 1)
-local Tab3Btn = createTabButton("🛠️ Công Cụ", 2)
+local t1 = mkTab("Cau Ca", 4)
+local t2 = mkTab("Ky Nang", 38)
+local t3 = mkTab("Cong Cu", 72)
 
--- Hàm tạo page
-local function createPage()
-    local page = Instance.new("ScrollingFrame", Pages)
-    page.Size = UDim2.new(1, 0, 1, 0)
-    page.BackgroundTransparency = 1
-    page.ScrollBarThickness = 2
-    page.Visible = false
-    return page
+local function mkPage()
+    local p = Instance.new("ScrollingFrame", pages)
+    p.Size = UDim2.new(1,0,1,0)
+    p.BackgroundTransparency = 1
+    p.ScrollBarThickness = 2
+    p.Visible = false
+    return p
 end
 
-local Page1, Page2, Page3 = createPage(), createPage(), createPage()
-local activePage = nil
+local p1,p2,p3 = mkPage(), mkPage(), mkPage()
+local cur
 
--- Hàm chọn tab
-local tweenInfoTab = TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-local function selectTab(selectedBtn, targetPage)
-    for _, btn in ipairs(tabButtons) do
-        if btn == selectedBtn then
-            TweenService:Create(btn, tweenInfoTab, {
-                BackgroundColor3 = Color3.fromRGB(0, 180, 100),
-                TextColor3 = Color3.fromRGB(255, 255, 255),
-                Size = UDim2.new(0.92, 0, 0, 30)
-            }):Play()
+local function sel(btn, page)
+    for _,b in pairs({t1,t2,t3}) do
+        if b == btn then
+            b.BackgroundColor3 = Color3.fromRGB(0,180,100)
+            b.TextColor3 = Color3.new(1,1,1)
         else
-            TweenService:Create(btn, tweenInfoTab, {
-                BackgroundColor3 = Color3.fromRGB(20, 20, 25),
-                TextColor3 = Color3.fromRGB(150, 150, 150),
-                Size = UDim2.new(0.85, 0, 0, 30)
-            }):Play()
+            b.BackgroundColor3 = Color3.fromRGB(20,20,25)
+            b.TextColor3 = Color3.fromRGB(150,150,150)
         end
     end
-    if activePage and activePage ~= targetPage then
-        activePage.Visible = false
-    end
-    targetPage.Visible = true
-    activePage = targetPage
+    if cur then cur.Visible = false end
+    page.Visible = true
+    cur = page
 end
 
-Tab1Btn.MouseButton1Click:Connect(function() selectTab(Tab1Btn, Page1) end)
-Tab2Btn.MouseButton1Click:Connect(function() selectTab(Tab2Btn, Page2) end)
-Tab3Btn.MouseButton1Click:Connect(function() selectTab(Tab3Btn, Page3) end)
+t1.MouseButton1Click:Connect(function() sel(t1,p1) end)
+t2.MouseButton1Click:Connect(function() sel(t2,p2) end)
+t3.MouseButton1Click:Connect(function() sel(t3,p3) end)
 
--- Hàm tạo nút thường
-local function createNormalButton(parent, text, yPos)
-    local btn = Instance.new("TextButton", parent)
-    btn.Size = UDim2.new(0.95, 0, 0, 32)
-    btn.Position = UDim2.new(0.025, 0, 0, yPos)
-    btn.Text = text
-    btn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-    btn.TextColor3 = Color3.new(1, 1, 1)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 10
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-    return btn
+local function mkBtn(parent, txt, y)
+    local b = Instance.new("TextButton", parent)
+    b.Size = UDim2.new(0.95,0,0,32)
+    b.Position = UDim2.new(0.025,0,0,y)
+    b.Text = txt
+    b.BackgroundColor3 = Color3.fromRGB(150,0,0)
+    b.TextColor3 = Color3.new(1,1,1)
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = 10
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
+    return b
 end
 
--- ============================================
--- 🎣 TAB CÂU CÁ (CHỈ CÓ NÚT CÂU ẢO)
--- ============================================
-local FishThipBtn = createNormalButton(Page1, "🟢 Nút Câu Ảo: TẮT", 5)
-FishThipBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+-- nut bat/tat cau ao
+local tog = mkBtn(p1, "Nut Cau Ao: TAT", 5)
 
--- ============================================
--- 🎣 NÚT CÂU ẢO (TẠO RIÊNG, KHÔNG NẰM TRONG UI)
--- ============================================
-local RealFishBtn = Instance.new("TextButton", sg)
-RealFishBtn.Size = UDim2.new(0, 95, 0, 95)
-RealFishBtn.Position = UDim2.new(0.85, 0, 0.40, 0)
-RealFishBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 120)
-RealFishBtn.Text = "Câu\nẢo"
-RealFishBtn.TextColor3 = Color3.fromRGB(10, 10, 15)
-RealFishBtn.Font = Enum.Font.GothamBold
-RealFishBtn.TextSize = 16
-RealFishBtn.Visible = false
-RealFishBtn.BorderSizePixel = 0
-Instance.new("UICorner", RealFishBtn).CornerRadius = UDim.new(1, 0)
+-- nut cau ao (mau bac)
+local silver = Color3.fromRGB(192,192,192)
+local fish = Instance.new("TextButton", sg)
+fish.Size = UDim2.new(0,95,0,95)
+fish.Position = UDim2.new(0.85,0,0.4,0)
+fish.BackgroundColor3 = silver
+fish.Text = "Cau\nAo"
+fish.TextColor3 = Color3.fromRGB(20,20,20)
+fish.Font = Enum.Font.GothamBold
+fish.TextSize = 16
+fish.Visible = false
+fish.BorderSizePixel = 0
+Instance.new("UICorner", fish).CornerRadius = UDim.new(1,0)
 
--- Toggle nút câu ảo
-local fishThipActive = false
-FishThipBtn.MouseButton1Click:Connect(function()
-    fishThipActive = not fishThipActive
-    RealFishBtn.Visible = fishThipActive
-    FishThipBtn.Text = "🟢 Nút Câu Ảo: " .. (fishThipActive and "BẬT" or "TẮT")
-    FishThipBtn.BackgroundColor3 = fishThipActive and Color3.fromRGB(0, 150, 80) or Color3.fromRGB(150, 0, 0)
+local on = false
+tog.MouseButton1Click:Connect(function()
+    on = not on
+    fish.Visible = on
+    tog.Text = "Nut Cau Ao: " .. (on and "BAT" or "TAT")
+    tog.BackgroundColor3 = on and Color3.fromRGB(0,150,80) or Color3.fromRGB(150,0,0)
 end)
 
--- Sự kiện nút câu ảo: bấm là thả câu
-RealFishBtn.MouseButton1Click:Connect(function()
+fish.MouseButton1Click:Connect(function()
     pcall(function()
         if RS:FindFirstChild("Events") and RS.Events:FindFirstChild("Fishing") then
             RS.Events.Fishing:FireServer()
@@ -221,48 +178,29 @@ RealFishBtn.MouseButton1Click:Connect(function()
             RS.Fishing:FireServer()
         end
     end)
-    RealFishBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    fish.BackgroundColor3 = Color3.fromRGB(230,230,230)
     task.wait(0.05)
-    RealFishBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 120)
+    fish.BackgroundColor3 = silver
 end)
 
--- Mở tab mặc định
-selectTab(Tab1Btn, Page1)
+sel(t1,p1)
 
--- ============================================
--- 📱 THU NHỎ/MỞ RỘNG
--- ============================================
-local isMinimized = false
-local tweenInfoResize = TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-
-MinBtn.MouseButton1Click:Connect(function()
-    isMinimized = not isMinimized
-    if isMinimized then
-        Sidebar.Visible = false
-        if activePage then activePage.Visible = false end
-        TweenService:Create(Main, tweenInfoResize, {Size = MinimizedSize}):Play()
-        MinBtn.Text = "+"
+local mini = false
+minb.MouseButton1Click:Connect(function()
+    mini = not mini
+    if mini then
+        side.Visible = false
+        if cur then cur.Visible = false end
+        main.Size = UDim2.new(0,420,0,40)
+        minb.Text = "+"
     else
-        TweenService:Create(Main, tweenInfoResize, {Size = MainSize}):Play()
-        task.wait(0.15)
-        Sidebar.Visible = true
-        if activePage then activePage.Visible = true end
-        MinBtn.Text = "—"
+        main.Size = UDim2.new(0,420,0,250)
+        side.Visible = true
+        if cur then cur.Visible = true end
+        minb.Text = "-"
     end
 end)
 
--- ============================================
--- ❌ ĐÓNG UI (KHÔNG TẮT NÚT CÂU ẢO)
--- ============================================
-CloseBtn.MouseButton1Click:Connect(function()
-    -- Chỉ ẩn UI, KHÔNG tắt nút câu ảo
-    Main.Visible = false
-    print("★ PPINGYYY HUB - Đã ẩn UI! Nút câu ảo vẫn hoạt động.")
+close.MouseButton1Click:Connect(function()
+    main.Visible = false
 end)
-
--- Animation mở UI
-TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-    Position = UDim2.new(0.3, 0, 0.3, 0)
-}):Play()
-
-print("★ PPINGYYY HUB - UI + Nút Câu Ảo đã tải thành công!")
